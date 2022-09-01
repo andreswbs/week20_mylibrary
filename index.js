@@ -3,23 +3,12 @@ dotenv.config()
 //import * from 'dotenv' 
 
 const express = require('express')
+
 const { Pool } = require('pg')
 
 const app = express()
+app.use(express.json())
 app.set('view engine', 'ejs')
-
-const books = [
-    {
-        author: 'Mark Twain',
-        title: 'Huckleberry Finn',
-        releaseYear: 1884
-    },
-    {
-        author: 'Frank Herbert',
-        title: 'Dune',
-        releaseYear: 1965
-    }
-]
 
 const port = process.env.PORT || 8080
 
@@ -39,13 +28,41 @@ app.get('/', (req, res) => {
 
 app.get('/api/book', (req, res ) => {
     pool.query('SELECT * FROM books;')
-    .then((data) => {res.json(data)})
+    .then((data) => {res.json(data.rows)})
     .catch((err) => {
         res.status(400).send({
             error: err.message
         })
     })
-    
 })
+
+app.get('/api/book/:id', (req, res ) => {
+    const { id } = req.params
+    pool.query('SELECT * FROM books WHERE id=$1;', [id])
+    .then((data) => {res.json(data.rows)})
+    .catch((err) => {
+        res.status(400).send({
+            error: err.message
+        })
+    })
+})
+
+app.post('/api/book', (req, res) => {
+    console.log(req.body)
+    pool.query(`
+    insert into books (author, title, release_year) 
+    values ($1, $2, $3)
+    returning *;
+    `,
+    [req.body.author, req.body.title, req.body.releaseYear]
+    )
+    .then((data) => {res.status(201).send(data)})
+    .catch((err) => {
+        res.status(400).send({
+            error: err.message
+        })
+    })
+})
+    
 
 app.listen(port, () => console.log('conncted to Postgre'))
