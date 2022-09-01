@@ -1,0 +1,11 @@
+create table books (
+    id serial primary key,
+    author varchar(255),
+    title varchar(400),
+    release_year int
+);
+
+insert into books(author, title, release_year) values ('Mark Twain', 'Huckleberry Finn', 1884); 
+insert into books(author, title, release_year) values ('Frank Herbert', 'Dune', 1965); 
+
+select * from books;
