@@ -6,6 +6,18 @@ create table books (
 );
 
 insert into books(author, title, release_year) values ('Mark Twain', 'Huckleberry Finn', 1884); 
+insert into books(author, title, release_year) values ('Mark Twain', 'The Advetnures of Tom Sawyer', 1876); 
 insert into books(author, title, release_year) values ('Frank Herbert', 'Dune', 1965); 
 
+select * 
+from books
+where author = 'Mark Twain' and release_year > 1880;
+
 select * from books;
+
+update books
+set release_year = 1877, title = 'Tom Sawyer'
+where id = 4;
+
+delete from books where id = 4;
+
