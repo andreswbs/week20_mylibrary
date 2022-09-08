@@ -1,4 +1,6 @@
 const dotenv = require('dotenv')
+const {patchTable} = require('./controllers/db_operations')
+
 dotenv.config()
 //import * from 'dotenv' 
 
@@ -27,7 +29,22 @@ app.get('/', (req, res) => {
 })
 
 app.get('/api/book', (req, res ) => {
-    pool.query('SELECT * FROM books;')
+    pool.query(`
+    SELECT books.title, books.id as book_id, author.id as author_id, author.name
+    FROM books
+    LEFT JOIN author ON author.id = books.author_id;`)
+    .then((data) => {res.json(data.rows)})
+    .catch((err) => {
+        res.status(400).send({
+            error: err.message
+        })
+    })
+})
+
+app.get('/api/author', (req, res ) => {
+    pool.query(`
+    SELECT *
+    FROM author;`)
     .then((data) => {res.json(data.rows)})
     .catch((err) => {
         res.status(400).send({
@@ -47,16 +64,90 @@ app.get('/api/book/:id', (req, res ) => {
     })
 })
 
+app.delete('/api/author/:id', (req, res) => {
+    const { id } = req.params
+    pool.query('DELETE FROM author where id=$1;', [id])
+    .then(() => {res.send({status: 'deleted'})})
+    .catch((err) => {
+        res.status(400).send({
+            error: err.message
+        })
+    })
+})
+
+app.delete('/api/book/:id', (req, res) => {
+    const { id } = req.params
+    pool.query('DELETE FROM books where id=$1;', [id])
+    .then(() => {res.send({status: 'deleted'})})
+    .catch((err) => {
+        res.status(400).send({
+            error: err.message
+        })
+    })
+})
+
+app.put('/api/author/:id', (req, res) => {
+    const { id } = req.params
+    pool.query(`
+    UPDATE author
+    set name=$1, birth_year=$2
+    where id=$3
+    returning *;
+    `, [req.body.name, req.body.birthYear, id])
+    .then((data) => {res.send(data.rows)})
+    .catch((err) => {
+        res.status(400).send({
+            error: err.message
+        })
+    })
+})
+
+app.patch('/api/author/:id', (req, res) => {
+    const { id } = req.params
+    const fieldMapping = {
+        name: 'name',
+        birthYear: 'birth_year'
+    }
+
+    const updates = Object.keys(req.body).map((param) => {
+        return {
+            field: fieldMapping[param],
+            value: req.body[param]
+        }
+    })
+    patchTable(pool, 'author', updates, id)
+    .then(() => {
+        res.send({status: 'updated'})
+    })
+})
+
 app.post('/api/book', (req, res) => {
     console.log(req.body)
     pool.query(`
-    insert into books (author, title, release_year) 
+    insert into books (title, release_year, author_id) 
     values ($1, $2, $3)
     returning *;
     `,
-    [req.body.author, req.body.title, req.body.releaseYear]
+    [req.body.title, req.body.releaseYear, req.body.authorId]
     )
-    .then((data) => {res.status(201).send(data)})
+    .then((data) => {res.status(201).send(data.rows)})
+    .catch((err) => {
+        res.status(400).send({
+            error: err.message
+        })
+    })
+})
+
+app.post('/api/author', (req, res) => {
+    console.log(req.body)
+    pool.query(`
+    insert into author (name, birth_year) 
+    values ($1, $2)
+    returning *;
+    `,
+    [req.body.name, req.body.birthYear]
+    )
+    .then((data) => {res.status(201).send(data.rows)})
     .catch((err) => {
         res.status(400).send({
             error: err.message
@@ -64,5 +155,4 @@ app.post('/api/book', (req, res) => {
     })
 })
     
-
 app.listen(port, () => console.log('conncted to Postgre'))

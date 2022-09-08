@@ -27,3 +27,5 @@ insert into books( title, release_year, author_id) values ('Dune', 1965, 2);
 
 select books.id, books.title, author.id as author_id,  author.name from books
 join author on books.author_id = author.id;
+
+
