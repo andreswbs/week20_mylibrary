@@ -30,7 +30,7 @@ app.get('/', (req, res) => {
 
 app.get('/api/book', (req, res ) => {
     pool.query(`
-    SELECT books.title, books.id as book_id, author.id as author_id, author.name
+    SELECT books.title, books.id as book_id, books.release_year, author.id as author_id, author.name
     FROM books
     LEFT JOIN author ON author.id = books.author_id;`)
     .then((data) => {res.json(data.rows)})
@@ -109,13 +109,21 @@ app.patch('/api/author/:id', (req, res) => {
         birthYear: 'birth_year'
     }
 
-    const updates = Object.keys(req.body).map((param) => {
-        return {
-            field: fieldMapping[param],
-            value: req.body[param]
-        }
+    patchTable(pool, 'author', fieldMapping, id, req)
+    .then(() => {
+        res.send({status: 'updated'})
     })
-    patchTable(pool, 'author', updates, id)
+})
+
+app.patch('/api/book/:id', (req, res) => {
+    const { id } = req.params
+    const fieldMapping = {
+        releaseYear: 'release_year',
+        title: 'title',
+        authorId: 'author_id'
+    }
+
+    patchTable(pool, 'books', fieldMapping, id, req)
     .then(() => {
         res.send({status: 'updated'})
     })
