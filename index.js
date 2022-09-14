@@ -1,5 +1,15 @@
 const dotenv = require('dotenv')
-const {patchTable, getBooks, getOneBook, getAuthors} = require('./controllers/db_operations')
+const {
+    patchTable, 
+    getBooks, 
+    getOneBook, 
+    getAuthors,
+    deleteAuthor,
+    deleteBook,
+    updateBook,
+    insertBook,
+    insertAuthor
+} = require('./controllers/db_operations')
 //const {patchTable} = require('./controllers/mongodb_operations')
 
 dotenv.config()
@@ -64,7 +74,7 @@ app.get('/api/book/:id', (req, res ) => {
 
 app.delete('/api/author/:id', (req, res) => {
     const { id } = req.params
-    pool.query('DELETE FROM author where id=$1;', [id])
+    deleteAuthor(pool, id)
     .then(() => {res.send({status: 'deleted'})})
     .catch((err) => {
         res.status(400).send({
@@ -75,7 +85,7 @@ app.delete('/api/author/:id', (req, res) => {
 
 app.delete('/api/book/:id', (req, res) => {
     const { id } = req.params
-    pool.query('DELETE FROM books where id=$1;', [id])
+    deleteBook(pool, id)
     .then(() => {res.send({status: 'deleted'})})
     .catch((err) => {
         res.status(400).send({
@@ -86,13 +96,8 @@ app.delete('/api/book/:id', (req, res) => {
 
 app.put('/api/author/:id', (req, res) => {
     const { id } = req.params
-    pool.query(`
-    UPDATE author
-    set name=$1, birth_year=$2
-    where id=$3
-    returning *;
-    `, [req.body.name, req.body.birthYear, id])
-    .then((data) => {res.send(data.rows)})
+    updateBook(pool, id, req.body)
+    .then((updatedData) => {res.send(updatedData)})
     .catch((err) => {
         res.status(400).send({
             error: err.message
@@ -142,15 +147,8 @@ app.get('/blog', (req, res  ) => {
 })
 
 app.post('/api/book', (req, res) => {
-    console.log(req.body)
-    pool.query(`
-    insert into books (title, release_year, author_id) 
-    values ($1, $2, $3)
-    returning *;
-    `,
-    [req.body.title, req.body.releaseYear, req.body.authorId]
-    )
-    .then((data) => {res.status(201).send(data.rows)})
+    insertBook(pool, req.body)
+    .then((data) => {res.status(201).send(data)})
     .catch((err) => {
         res.status(400).send({
             error: err.message
@@ -159,15 +157,8 @@ app.post('/api/book', (req, res) => {
 })
 
 app.post('/api/author', (req, res) => {
-    console.log(req.body)
-    pool.query(`
-    insert into author (name, birth_year) 
-    values ($1, $2)
-    returning *;
-    `,
-    [req.body.name, req.body.birthYear]
-    )
-    .then((data) => {res.status(201).send(data.rows)})
+    insertAuthor(pool, req.body)
+    .then((data) => {res.status(201).send(data)})
     .catch((err) => {
         res.status(400).send({
             error: err.message

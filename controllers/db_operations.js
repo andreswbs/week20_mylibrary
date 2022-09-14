@@ -52,9 +52,63 @@ function getOneBook(pool, id ) {
     )
 }
 
+function deleteAuthor(pool, id ) {
+    return pool.query('DELETE FROM author where id=$1;', [id])
+    .then((data) => { 
+        return(data.rows)}
+    )
+}
+
+function deleteBook(pool, id ) {
+    return pool.query('DELETE FROM books where id=$1;', [id])
+    .then((data) => { 
+        return(data.rows)}
+    )
+}
+
+function updateBook(pool, id, update ) {
+    return pool.query(`
+    UPDATE author
+    set name=$1, birth_year=$2
+    where id=$3
+    returning *;
+    `, [update.name, update.birthYear, id])
+    .then((data) => { 
+        return(data.rows)}
+    )
+}
+function insertBook(pool, update ) {
+    return pool.query(`
+    insert into books (title, release_year, author_id) 
+    values ($1, $2, $3)
+    returning *;
+    `,
+    [update.title, update.releaseYear, update.authorId])
+    .then((data) => { 
+        return(data.rows)}
+    )
+}
+
+function insertAuthor(pool, update ) {
+    return pool.query(`
+    insert into author (name, birth_year) 
+    values ($1, $2)
+    returning *;
+    `,
+    [update.name, update.birthYear])
+    .then((data) => { 
+        return(data.rows)}
+    )
+}
+
 module.exports = {
     patchTable,
     getBooks,
     getOneBook,
-    getAuthors
+    getAuthors,
+    deleteAuthor,
+    deleteBook,
+    updateBook,
+    insertBook,
+    insertAuthor
 }
