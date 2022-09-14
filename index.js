@@ -1,15 +1,18 @@
 const dotenv = require('dotenv')
-const {patchTable} = require('./controllers/db_operations')
+const {patchTable, getBooks, getOneBook, getAuthors} = require('./controllers/db_operations')
+//const {patchTable} = require('./controllers/mongodb_operations')
 
 dotenv.config()
 //import * from 'dotenv' 
 
 const express = require('express')
+const cors = require('cors')
 
 const { Pool } = require('pg')
 
 const app = express()
 app.use(express.json())
+app.use(cors())
 app.set('view engine', 'ejs')
 
 const port = process.env.PORT || 8080
@@ -29,11 +32,8 @@ app.get('/', (req, res) => {
 })
 
 app.get('/api/book', (req, res ) => {
-    pool.query(`
-    SELECT books.title, books.id as book_id, books.release_year, author.id as author_id, author.name
-    FROM books
-    LEFT JOIN author ON author.id = books.author_id;`)
-    .then((data) => {res.json(data.rows)})
+    getBooks(pool)
+    .then((books) => {res.json(books)})
     .catch((err) => {
         res.status(400).send({
             error: err.message
@@ -42,10 +42,8 @@ app.get('/api/book', (req, res ) => {
 })
 
 app.get('/api/author', (req, res ) => {
-    pool.query(`
-    SELECT *
-    FROM author;`)
-    .then((data) => {res.json(data.rows)})
+    getAuthors(pool)
+    .then((authors) => {res.json(authors)})
     .catch((err) => {
         res.status(400).send({
             error: err.message
@@ -55,8 +53,8 @@ app.get('/api/author', (req, res ) => {
 
 app.get('/api/book/:id', (req, res ) => {
     const { id } = req.params
-    pool.query('SELECT * FROM books WHERE id=$1;', [id])
-    .then((data) => {res.json(data.rows)})
+    getOneBook(pool, id)
+    .then((data) => {res.json(data)})
     .catch((err) => {
         res.status(400).send({
             error: err.message
@@ -127,6 +125,20 @@ app.patch('/api/book/:id', (req, res) => {
     .then(() => {
         res.send({status: 'updated'})
     })
+})
+
+app.get('/blog', (req, res  ) => {
+    res.send(
+        [
+            {
+                blogId: 3,
+                title: 'Blog post title',
+                content: 'adsfasdfasdfa',
+                mainPicUrl: 'http://????????????????'
+            },
+            {}
+        ]
+    )
 })
 
 app.post('/api/book', (req, res) => {

@@ -29,4 +29,32 @@ async function patchTable(pool, table, fieldMapping, id, req) {
     return pool.query(sql, updateQuery)
 }
 
-module.exports = {patchTable}
+function getBooks(pool) {
+    return pool.query(`
+        SELECT books.title, books.id as book_id, books.release_year, author.id as author_id, author.name
+        FROM books
+        LEFT JOIN author ON author.id = books.author_id;`)
+    .then((data) => { 
+        return(data.rows)}
+    )
+}
+function getAuthors(pool) {
+    return pool.query(`SELECT * FROM author;`)
+    .then((data) => { 
+        return(data.rows)}
+    )
+}
+
+function getOneBook(pool, id ) {
+    return pool.query('SELECT * FROM books WHERE id=$1;', [id])
+    .then((data) => { 
+        return(data.rows)}
+    )
+}
+
+module.exports = {
+    patchTable,
+    getBooks,
+    getOneBook,
+    getAuthors
+}

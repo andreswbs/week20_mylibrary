@@ -29,3 +29,11 @@ select books.id, books.title, author.id as author_id,  author.name from books
 join author on books.author_id = author.id;
 
 
+select *
+from blog;
+
+select blog.id, blog.title, blog.content, assets.url as main_pic_url
+from blog
+INNER JOIN assets ON blog.main_picture_id = assets.id
+
+
