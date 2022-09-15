@@ -39,8 +39,17 @@ async function getAuthors() {
     return dbAuthors.map((dbAuthor) => _makeAuthor(dbAuthor))
 }
 
-function getOneBook(pool, id ) {
-    throw Error("implement this function!")
+async function getOneBook(id) {
+    const dbBook = await Book.findById(id)
+    const apiBook = _makeBook(dbBook)
+    const author = await getOneAuthor(apiBook.authorId)
+    apiBook.author = author
+    return apiBook
+}
+
+async function getOneAuthor(id) {
+    const author = await Author.findById(id)
+    return _makeAuthor(author)
 }
 
 function deleteAuthor(pool, id ) {
@@ -83,5 +92,6 @@ module.exports = {
     deleteBook,
     updateAuthor,
     insertBook,
-    insertAuthor
+    insertAuthor,
+    getOneAuthor
 }

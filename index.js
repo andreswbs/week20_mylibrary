@@ -9,7 +9,8 @@ const {
     deleteBook,
     updateAuthor,
     insertBook,
-    insertAuthor
+    insertAuthor,
+    getOneAuthor
 } = require('./controllers/mongodb_operations')
 
 
@@ -48,6 +49,13 @@ app.get('/api/author', (req, res ) => {
 app.get('/api/book/:id', (req, res ) => {
     const { id } = req.params
     getOneBook(id)
+    .then((data) => {res.json(data)})
+    .catch (err => sendErrorOutput(err, res))
+})
+
+app.get('/api/author/:id', (req, res ) => {
+    const { id } = req.params
+    getOneAuthor(id)
     .then((data) => {res.json(data)})
     .catch (err => sendErrorOutput(err, res))
 })
