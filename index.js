@@ -1,4 +1,5 @@
-const dotenv = require('dotenv')
+require('dotenv').config()
+
 const {
     patchTable, 
     getBooks, 
@@ -6,19 +7,15 @@ const {
     getAuthors,
     deleteAuthor,
     deleteBook,
-    updateBook,
+    updateAuthor,
     insertBook,
     insertAuthor
 } = require('./controllers/db_operations')
 //const {patchTable} = require('./controllers/mongodb_operations')
-
-dotenv.config()
 //import * from 'dotenv' 
 
 const express = require('express')
 const cors = require('cors')
-
-const { Pool } = require('pg')
 
 const app = express()
 app.use(express.json())
@@ -27,82 +24,59 @@ app.set('view engine', 'ejs')
 
 const port = process.env.PORT || 8080
 
-const pool = new Pool({
-    user: process.env.PG_USER,
-    host: process.env.PG_HOST,
-    database: process.env.PG_DATABASE,
-    password: process.env.PG_PASSWORD,
-    port: process.env.PG_PORT,
-    ssl: true, 
-    ssl: { rejectUnauthorized: false }
-})
+function sendErrorOutput(err, res) {
+    res.status(400).send({
+        errors: [err.message],
+    })
+}
 
 app.get('/', (req, res) => {
     res.render('greeting')
 })
 
 app.get('/api/book', (req, res ) => {
-    getBooks(pool)
+    getBooks()
     .then((books) => {res.json(books)})
-    .catch((err) => {
-        res.status(400).send({
-            error: err.message
-        })
-    })
+    .catch (err => sendErrorOutput(err, res))
 })
 
 app.get('/api/author', (req, res ) => {
-    getAuthors(pool)
+    getAuthors()
     .then((authors) => {res.json(authors)})
-    .catch((err) => {
-        res.status(400).send({
-            error: err.message
-        })
-    })
+    .catch (err => sendErrorOutput(err, res))
 })
 
 app.get('/api/book/:id', (req, res ) => {
     const { id } = req.params
-    getOneBook(pool, id)
+    getOneBook(id)
     .then((data) => {res.json(data)})
-    .catch((err) => {
-        res.status(400).send({
-            error: err.message
-        })
-    })
+    .catch (err => sendErrorOutput(err, res))
 })
 
 app.delete('/api/author/:id', (req, res) => {
     const { id } = req.params
-    deleteAuthor(pool, id)
+    deleteAuthor(id)
     .then(() => {res.send({status: 'deleted'})})
-    .catch((err) => {
-        res.status(400).send({
-            error: err.message
-        })
-    })
+    .catch (err => sendErrorOutput(err, res))
 })
 
 app.delete('/api/book/:id', (req, res) => {
     const { id } = req.params
-    deleteBook(pool, id)
+    deleteBook(id)
     .then(() => {res.send({status: 'deleted'})})
-    .catch((err) => {
-        res.status(400).send({
-            error: err.message
-        })
-    })
+    .catch (err => sendErrorOutput(err, res))
 })
 
 app.put('/api/author/:id', (req, res) => {
     const { id } = req.params
-    updateBook(pool, id, req.body)
+
+    if (!req.body.name || !req.body.birthYear) {
+        return res.status(400).send({error: "name or birthYear is missing. Check API documentation"})
+    }
+
+    updateAuthor(id, req.body)
     .then((updatedData) => {res.send(updatedData)})
-    .catch((err) => {
-        res.status(400).send({
-            error: err.message
-        })
-    })
+    .catch (err => sendErrorOutput(err, res))
 })
 
 app.patch('/api/author/:id', (req, res) => {
@@ -112,10 +86,11 @@ app.patch('/api/author/:id', (req, res) => {
         birthYear: 'birth_year'
     }
 
-    patchTable(pool, 'author', fieldMapping, id, req)
+    patchTable('author', fieldMapping, id, req)
     .then(() => {
         res.send({status: 'updated'})
     })
+    .catch (err => sendErrorOutput(err, res))
 })
 
 app.patch('/api/book/:id', (req, res) => {
@@ -126,10 +101,11 @@ app.patch('/api/book/:id', (req, res) => {
         authorId: 'author_id'
     }
 
-    patchTable(pool, 'books', fieldMapping, id, req)
+    patchTable('books', fieldMapping, id, req)
     .then(() => {
         res.send({status: 'updated'})
     })
+    .catch (err => sendErrorOutput(err, res))
 })
 
 app.get('/blog', (req, res  ) => {
@@ -147,7 +123,7 @@ app.get('/blog', (req, res  ) => {
 })
 
 app.post('/api/book', (req, res) => {
-    insertBook(pool, req.body)
+    insertBook(req.body)
     .then((data) => {res.status(201).send(data)})
     .catch((err) => {
         res.status(400).send({
@@ -157,13 +133,9 @@ app.post('/api/book', (req, res) => {
 })
 
 app.post('/api/author', (req, res) => {
-    insertAuthor(pool, req.body)
+    insertAuthor(req.body)
     .then((data) => {res.status(201).send(data)})
-    .catch((err) => {
-        res.status(400).send({
-            error: err.message
-        })
-    })
+    .catch (err => sendErrorOutput(err, res))
 })
     
 app.listen(port, () => console.log('conncted to Postgre'))

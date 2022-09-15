@@ -1,6 +1,16 @@
+const { Pool } = require('pg')
 
+const pool = new Pool({
+    user: process.env.PG_USER,
+    host: process.env.PG_HOST,
+    database: process.env.PG_DATABASE,
+    password: process.env.PG_PASSWORD,
+    port: process.env.PG_PORT,
+    ssl: true, 
+    ssl: { rejectUnauthorized: false }
+})
 
-async function patchTable(pool, table, fieldMapping, id, req) {
+async function patchTable(table, fieldMapping, id, req) {
     // updates  [{field: 'name', value: 'Changed Name'}, {field: 'address', value: 'New York'}, {field: phone, value: '23423423'}]
     const updates = Object.keys(req.body).map((param) => {
         return {
@@ -29,7 +39,7 @@ async function patchTable(pool, table, fieldMapping, id, req) {
     return pool.query(sql, updateQuery)
 }
 
-function getBooks(pool) {
+function getBooks() {
     return pool.query(`
         SELECT books.title, books.id as book_id, books.release_year, author.id as author_id, author.name
         FROM books
@@ -38,35 +48,35 @@ function getBooks(pool) {
         return(data.rows)}
     )
 }
-function getAuthors(pool) {
+function getAuthors() {
     return pool.query(`SELECT * FROM author;`)
     .then((data) => { 
         return(data.rows)}
     )
 }
 
-function getOneBook(pool, id ) {
+function getOneBook(id ) {
     return pool.query('SELECT * FROM books WHERE id=$1;', [id])
     .then((data) => { 
         return(data.rows)}
     )
 }
 
-function deleteAuthor(pool, id ) {
+function deleteAuthor(id ) {
     return pool.query('DELETE FROM author where id=$1;', [id])
     .then((data) => { 
         return(data.rows)}
     )
 }
 
-function deleteBook(pool, id ) {
+function deleteBook(id ) {
     return pool.query('DELETE FROM books where id=$1;', [id])
     .then((data) => { 
         return(data.rows)}
     )
 }
 
-function updateBook(pool, id, update ) {
+function updateAuthor(id, update ) {
     return pool.query(`
     UPDATE author
     set name=$1, birth_year=$2
@@ -77,7 +87,7 @@ function updateBook(pool, id, update ) {
         return(data.rows)}
     )
 }
-function insertBook(pool, update ) {
+function insertBook(update ) {
     return pool.query(`
     insert into books (title, release_year, author_id) 
     values ($1, $2, $3)
@@ -89,7 +99,7 @@ function insertBook(pool, update ) {
     )
 }
 
-function insertAuthor(pool, update ) {
+function insertAuthor(update ) {
     return pool.query(`
     insert into author (name, birth_year) 
     values ($1, $2)
@@ -108,7 +118,7 @@ module.exports = {
     getAuthors,
     deleteAuthor,
     deleteBook,
-    updateBook,
+    updateAuthor,
     insertBook,
     insertAuthor
 }
