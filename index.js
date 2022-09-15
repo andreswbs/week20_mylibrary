@@ -11,8 +11,7 @@ const {
     insertBook,
     insertAuthor
 } = require('./controllers/mongodb_operations')
-//const {patchTable} = require('./controllers/mongodb_operations')
-//import * from 'dotenv' 
+
 
 const express = require('express')
 const cors = require('cors')

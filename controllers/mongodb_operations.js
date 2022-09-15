@@ -1,4 +1,7 @@
 const mongoose = require('mongoose')
+
+const Author = require('../model/author')
+
 const mongodbConnection = `mongodb+srv://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_URL}/?retryWrites=true&w=majority`
 
 mongoose.connect(mongodbConnection)
@@ -35,8 +38,12 @@ function insertBook(pool, update ) {
     throw Error("implement this function!")
 }
 
-function insertAuthor(pool, update ) {
-    throw Error("implement this function!")
+async function insertAuthor(update ) {
+    const newAuthor = await Author.create({
+        name: update.name,
+        birth_year: update.birthYear
+    })
+    return newAuthor
 }
 
 module.exports = {
