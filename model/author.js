@@ -8,4 +8,3 @@ const authorSchema = new Schema({
 })
 
 module.exports = mongoose.model('Author', authorSchema)
-//export default mongoose.model('Author', authorSchema)
