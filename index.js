@@ -10,7 +10,7 @@ const {
     updateAuthor,
     insertBook,
     insertAuthor
-} = require('./controllers/db_operations')
+} = require('./controllers/mongodb_operations')
 //const {patchTable} = require('./controllers/mongodb_operations')
 //import * from 'dotenv' 
 
@@ -138,4 +138,4 @@ app.post('/api/author', (req, res) => {
     .catch (err => sendErrorOutput(err, res))
 })
     
-app.listen(port, () => console.log('conncted to Postgre'))
+app.listen(port, () => console.log('Ready and connected'))
