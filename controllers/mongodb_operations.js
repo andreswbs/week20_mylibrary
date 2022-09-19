@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 
 const Author = require('../model/author')
+const book = require('../model/book')
 const Book = require('../model/book')
 
 const mongodbConnection = `mongodb+srv://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_URL}/?retryWrites=true&w=majority`
@@ -11,7 +12,7 @@ db.on('error', console.error.bind(console, 'MongoDB connection failed'))
 
 function _makeAuthor(dbAuthor)  {
     return {
-        id: dbAuthor._id,
+        id: dbAuthor._id.toString(),
         name: dbAuthor.name,
         birthYear: dbAuthor.birth_year
     }
@@ -19,7 +20,7 @@ function _makeAuthor(dbAuthor)  {
 
 function _makeBook(dbBook) {
     return {
-        id: dbBook._id,
+        id: dbBook._id.toString(),
         title: dbBook.title,
         releaseYear: dbBook.release_year,
         authorId: dbBook.author_id
@@ -32,8 +33,16 @@ async function patchTable(pool, table, fieldMapping, id, req) {
 
 async function getBooks() {
     const dbBooks = await Book.find({})
-    return dbBooks.map((dbBook) => _makeBook(dbBook))
+    const authors = await getAuthors()
+    const allBooks = dbBooks.map((dbBook) => {
+        const apiBook = _makeBook(dbBook)
+        const author = authors.find((el) => el.id === apiBook.authorId)
+        apiBook.author = author
+        return apiBook
+    })
+    return allBooks
 }
+
 async function getAuthors() {
     const dbAuthors = await Author.find({})
     return dbAuthors.map((dbAuthor) => _makeAuthor(dbAuthor))
@@ -48,7 +57,13 @@ async function getOneBook(id) {
 }
 
 async function getOneAuthor(id) {
-    const author = await Author.findById(id)
+    let author
+    try {
+        author = await Author.findById(id)
+    } catch (e) {
+        console.log("Error when getting author: " + e.message)
+        return null;
+    }
     return _makeAuthor(author)
 }
 
